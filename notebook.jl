@@ -75,6 +75,82 @@ The initial state and the parameter values are specified using a mapping from th
 The mappings are an array of `Pair`s, constructed using the `=>` operator.
 """
 
+# ╔═╡ 2931f79f-1a51-490b-a59e-b0917a86f1c0
+md"""
+## Algebraic relations and structural simplification
+You could separate the calculation of the right-hand side, by introducing an intermediate variable, `RHS`:
+"""
+
+# ╔═╡ 33fa14a4-d339-425b-9aa4-54d48cc85734
+begin
+	@variables RHS(t)
+	@named fol_separate = ODESystem([ RHS ~ (h - x)/τ,
+									  D(x) ~ RHS])
+end
+
+# ╔═╡ a40c3925-9971-44c2-83af-0c4dcc9b4239
+md"""
+Now, besides the differential equation, there's an additional algebraic equation.
+This means that you should move from an `ODEProblem` to a Differential-Algebraic Equation (DAE) problem.
+You know however that the DAE system can be transformed into the single ODE we used above.
+MTK can do that too, through something called structural simplification:
+"""
+
+# ╔═╡ 44fc57b9-4c63-4be0-b210-3180da5e378c
+begin
+	fol_simplified = structural_simplify(fol_separate)	
+	equations(fol_simplified) == equations(fol_model)
+end
+
+# ╔═╡ 8d04e198-b4d0-4f4b-a517-a1136d3883e6
+md"""
+Note that you can extract the equations from a system using `equations` (there's also `states` and `parameters`):
+"""
+
+# ╔═╡ 56f7cf99-7bd0-4f6c-98cf-47dd73c7e4c3
+equations(fol_model)
+
+# ╔═╡ 96d344d6-a6d8-45c7-bfeb-637f17b159c9
+states(fol_model)
+
+# ╔═╡ 4715f7f6-51ad-4e14-bd19-7f9a978dcad8
+parameters(fol_model)
+
+# ╔═╡ 74ad99e9-a5f0-4dc3-b342-06e4c1455fa7
+md"""
+The simulation performance of the simplified equation, `fol_simplified` will be the same of `fol_model`, since the two are the exact same equation.
+However, there's a difference.
+MTK keeps track of the eliminated algebraic variables (here `RHS`) as "observables".
+That means that MTK still knows how to calculate them out of the information available in a simulation result.
+This allows us to plot the right hand side of our equation, $\frac{h - x(t)}{\tau}$ along with the state variable, $x$:
+"""
+
+# ╔═╡ 011df8cc-65f5-42d8-9b97-4c6f511012a5
+begin
+	simplified_prob = ODEProblem(fol_simplified, [x => 0.0], (0.0,10.0), [τ => 3.0])
+	simplified_sol = solve(simplified_prob)
+	plot(simplified_sol, idxs=[x, RHS])
+end
+
+# ╔═╡ ab5c28a5-815f-485d-bf46-dc467322759e
+md"""
+Besides being able to capture `RHS` and use it later, doing this is even more useful because it allows you to pass the `ODESystem` through `structural_simplify`.
+Even in this very simple case, where the model is tiny (one equation), there's still advantages to be had for using `structural_simplify`.
+For example, `structural_simplify` also replaces symbolic `constants` (here `h`) with their default values.
+This allows additional simplifications not possible if using `parameters` — e.g., solution of linear equations by dividing out the `constant`'s value, which cannot be done for `parameters` since they may be zero.
+
+Lastly, notice that you can index the solution via the names:
+"""
+
+# ╔═╡ 7aabfba6-c645-4abf-928d-a41e2d96528b
+sol[x]
+
+# ╔═╡ b121f625-008e-4baf-a406-b8b25fe6536b
+sol[x,2:10] # 2nd through 10th values of `x` matching `sol.t`
+
+# ╔═╡ 5370bffc-9596-4d67-bf56-34286c929be1
+simplified_sol[RHS] # also works for eliminated variables
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -1935,5 +2011,19 @@ version = "1.4.1+0"
 # ╠═06d184d1-bf50-4853-a8f7-9d11a4d996c5
 # ╠═6a9688f8-73e0-4317-8975-f5c55403e67e
 # ╟─cc61706e-7e79-4da7-a225-291d913ad989
+# ╟─2931f79f-1a51-490b-a59e-b0917a86f1c0
+# ╠═33fa14a4-d339-425b-9aa4-54d48cc85734
+# ╟─a40c3925-9971-44c2-83af-0c4dcc9b4239
+# ╠═44fc57b9-4c63-4be0-b210-3180da5e378c
+# ╟─8d04e198-b4d0-4f4b-a517-a1136d3883e6
+# ╠═56f7cf99-7bd0-4f6c-98cf-47dd73c7e4c3
+# ╠═96d344d6-a6d8-45c7-bfeb-637f17b159c9
+# ╠═4715f7f6-51ad-4e14-bd19-7f9a978dcad8
+# ╟─74ad99e9-a5f0-4dc3-b342-06e4c1455fa7
+# ╠═011df8cc-65f5-42d8-9b97-4c6f511012a5
+# ╟─ab5c28a5-815f-485d-bf46-dc467322759e
+# ╠═7aabfba6-c645-4abf-928d-a41e2d96528b
+# ╠═b121f625-008e-4baf-a406-b8b25fe6536b
+# ╠═5370bffc-9596-4d67-bf56-34286c929be1
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
