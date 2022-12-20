@@ -10,8 +10,12 @@ using ModelingToolkit
 # ╔═╡ 06d184d1-bf50-4853-a8f7-9d11a4d996c5
 begin
 	using DifferentialEquations
+	using LaTeXStrings # for cool labels
 	using Plots
 end
+
+# ╔═╡ 6bf07c03-7eb3-4e84-9bb8-4cf36c2539d0
+using DataInterpolations
 
 # ╔═╡ 6fa29060-7e58-11ed-0684-771304878d5f
 md"""
@@ -60,7 +64,7 @@ Now that we have our model, we can solve it:
 
 # ╔═╡ 6a9688f8-73e0-4317-8975-f5c55403e67e
 begin
-	prob = ODEProblem(fol_model, [x => 0.0], (0.0,10.0), [τ => 3.0])
+	prob = ODEProblem(fol_model, [x => 0.0], (0.0, 10.0), [τ => 3.0])
 	# parameter `τ` can be assigned a value, constant `h` cannot
 	sol = solve(prob)
 	plot(sol)
@@ -127,9 +131,9 @@ This allows us to plot the right hand side of our equation, $\frac{h - x(t)}{\ta
 
 # ╔═╡ 011df8cc-65f5-42d8-9b97-4c6f511012a5
 begin
-	simplified_prob = ODEProblem(fol_simplified, [x => 0.0], (0.0,10.0), [τ => 3.0])
+	simplified_prob = ODEProblem(fol_simplified, [x => 0.0], (0.0, 10.0), [τ => 3.0])
 	simplified_sol = solve(simplified_prob)
-	plot(simplified_sol, idxs=[x, RHS])
+	plot(simplified_sol, idxs=[x, RHS], label=["x(t)" L"\frac{h - x(t)}{\tau}"])
 end
 
 # ╔═╡ ab5c28a5-815f-485d-bf46-dc467322759e
@@ -151,15 +155,92 @@ sol[x,2:10] # 2nd through 10th values of `x` matching `sol.t`
 # ╔═╡ 5370bffc-9596-4d67-bf56-34286c929be1
 simplified_sol[RHS] # also works for eliminated variables
 
+# ╔═╡ a9e1cbeb-da2e-4225-82fd-aecbe8913a72
+md"""
+## Specifying a time-variable forcing function
+Our forcing function $f(t)$ was so far modelled as a constant (`h = 1`).
+It would make more sence if the forcing function, i.e. the external input to the system, to vary through time.
+The simplest thing to do would be to use an explicit, symbolic function of time:
+"""
+
+# ╔═╡ 77cc4886-cd4c-442d-8a1e-5e14937e55ea
+begin
+	@variables f(t)
+	@named fol_variable_f = ODESystem([f ~ sin(t), D(x) ~ (f - x)/τ])
+end
+
+# ╔═╡ 61cd1de2-a756-49e8-be72-89bc20ca7624
+md"""
+This is a cool way to see the lag in action!
+"""
+
+# ╔═╡ e0beaa4b-f3f1-48b6-b20b-73e827385892
+begin
+	variable_prob = ODEProblem(structural_simplify(fol_variable_f), [x => 0.0], (0.0, 10.0), [τ => 0.75])
+
+	variable_sol = solve(variable_prob)
+	plot(variable_sol, idxs=[x,f])
+end
+
+# ╔═╡ 14c05116-ebea-4079-a6c2-76777e5d0e16
+md"""
+That's good and all, but what if there was a case where we wouldn't want the forcing function to be symbolic and be a good plain ol' Julia function instead.
+Why?
+Ofter in modeling we work in time-series data, such as measurement data from an experiment.
+It's common to want to embed the data, well, *as data*, be it in the simulation of a PDE or, as is the case here, as a forcing function on the right-hand side of an ODE.
+Let's illustrate this option by a simple lookup of a vector of random values.
+This can be thought of as a zero-order hold: a model that represents the behavior of a system that holds its output constant between discrete time steps:
+"""
+
+# ╔═╡ dfdaf13a-7295-45b0-9d0a-73894952857c
+begin
+	value_vector = randn(10)
+	f_fun(t) = t >= 10 ? value_vector[end] : value_vector[Int(floor(t))+1]
+	@register_symbolic f_fun(t)
+	
+	@named fol_external_f = ODESystem([f ~ f_fun(t), D(x) ~ (f - x)/τ])
+end
+
+# ╔═╡ 703fc569-e436-4f32-ac4a-22331aab0eb8
+begin
+	external_prob = ODEProblem(structural_simplify(fol_external_f), [x => 0.0], (0.0, 10.0), [τ => 0.75])
+	
+	external_sol = solve(external_prob)
+	plot(external_sol, idxs=[x,f])
+end
+
+# ╔═╡ afee4ab1-9470-4877-9a7e-daf7c3869c65
+begin
+	function interpolate_time_series(t, times, values)
+		return QuadraticInterpolation(values, times)(t)
+	end
+	# @register_symbolic isn't needed,
+	# DataInterpolations has already register functions
+	# taken care of.
+
+	ts = LinRange(0.5, 10.5, 10)
+	
+	@named fol_interpolated_f = ODESystem([f ~ interpolate_time_series(t, ts, value_vector), D(x) ~ (f - x)/τ])
+	interpolated_prob = ODEProblem(structural_simplify(fol_interpolated_f), [x => 0.0], (0.0, 10.0), [τ => 0.75])
+	
+	interpolated_sol = solve(interpolated_prob)
+	plot(interpolated_sol, idxs=[x,f], label=["x(t)" "Interpolated f(t)"])
+	scatter!(ts, value_vector, label="f(t)")
+end
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+DataInterpolations = "82cc6244-b520-54b8-b5a6-8a565e85f1d0"
 DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
+LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 
 [compat]
+DataInterpolations = "~3.10.1"
 DifferentialEquations = "~7.6.0"
+LaTeXStrings = "~1.3.0"
 ModelingToolkit = "~8.38.0"
 Plots = "~1.38.0"
 """
@@ -170,7 +251,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.3"
 manifest_format = "2.0"
-project_hash = "7a3f7278f359999d4c8a8b401d05ad6b0ad67641"
+project_hash = "b5ffb92e4cf5d4bdf60bb29aeea3f2fb5c3e5d1f"
 
 [[deps.AbstractAlgebra]]
 deps = ["GroupsCore", "InteractiveUtils", "LinearAlgebra", "MacroTools", "Markdown", "Random", "RandomExtensions", "SparseArrays", "Test"]
@@ -448,6 +529,12 @@ version = "4.1.1"
 git-tree-sha1 = "e8119c1a33d267e16108be441a287a6981ba1630"
 uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
 version = "1.14.0"
+
+[[deps.DataInterpolations]]
+deps = ["ChainRulesCore", "LinearAlgebra", "Optim", "RecipesBase", "RecursiveArrayTools", "Reexport", "RegularizationTools", "Symbolics"]
+git-tree-sha1 = "cd5e1d85ca89521b7df86eb343bb129799d92b15"
+uuid = "82cc6244-b520-54b8-b5a6-8a565e85f1d0"
+version = "3.10.1"
 
 [[deps.DataStructures]]
 deps = ["Compat", "InteractiveUtils", "OrderedCollections"]
@@ -940,6 +1027,18 @@ git-tree-sha1 = "7e34177793212f6d64d045ee47d2883f09fffacc"
 uuid = "10f19ff3-798f-405d-979b-55457f8fc047"
 version = "0.1.12"
 
+[[deps.Lazy]]
+deps = ["MacroTools"]
+git-tree-sha1 = "1370f8202dac30758f3c345f9909b97f53d87d3f"
+uuid = "50d2b5c4-7a5e-59d5-8109-a42b560f39c0"
+version = "0.15.1"
+
+[[deps.LeastSquaresOptim]]
+deps = ["FiniteDiff", "ForwardDiff", "LinearAlgebra", "Optim", "Printf", "SparseArrays", "Statistics", "SuiteSparse"]
+git-tree-sha1 = "06ea4a7c438f434dc0dc8d03c72e61ee0bf3629d"
+uuid = "0fc2ff8b-aaa3-5acd-a817-1944a5e08891"
+version = "0.8.3"
+
 [[deps.LevyArea]]
 deps = ["LinearAlgebra", "Random", "SpecialFunctions"]
 git-tree-sha1 = "56513a09b8e0ae6485f34401ea9e2f31357958ec"
@@ -1053,6 +1152,11 @@ git-tree-sha1 = "f63e9022be00102b6d135b3363680e5befa8e227"
 uuid = "bdcacae8-1622-11e9-2a5c-532679323890"
 version = "0.12.142"
 
+[[deps.MLStyle]]
+git-tree-sha1 = "060ef7956fef2dc06b0e63b294f7dbfbcbdc7ea2"
+uuid = "d8e11817-5142-5d16-987a-aa16d5891078"
+version = "0.4.16"
+
 [[deps.MacroTools]]
 deps = ["Markdown", "Random"]
 git-tree-sha1 = "42324d08725e200c23d4dfb549e0d5d89dede2d2"
@@ -1083,6 +1187,12 @@ version = "2.28.0+0"
 git-tree-sha1 = "c13304c81eec1ed3af7fc20e75fb6b26092a1102"
 uuid = "442fdcdd-2543-5da2-b0f3-8c86c306513e"
 version = "0.3.2"
+
+[[deps.Memoize]]
+deps = ["MacroTools"]
+git-tree-sha1 = "2b1dfcba103de714d31c033b5dacc2e4a12c7caa"
+uuid = "c03570c3-d221-55d1-a50c-7939bbd78826"
+version = "0.4.4"
 
 [[deps.Metatheory]]
 deps = ["AutoHashEquals", "DataStructures", "Dates", "DocStringExtensions", "Parameters", "Reexport", "TermInterface", "ThreadsX", "TimerOutputs"]
@@ -1392,6 +1502,12 @@ deps = ["Adapt"]
 git-tree-sha1 = "e681d3bfa49cd46c3c161505caddf20f0e62aaa9"
 uuid = "42d2dcc6-99eb-4e98-b66c-637b7d73030e"
 version = "0.1.2"
+
+[[deps.RegularizationTools]]
+deps = ["Calculus", "Lazy", "LeastSquaresOptim", "LinearAlgebra", "MLStyle", "Memoize", "Optim", "Random", "Underscores"]
+git-tree-sha1 = "d445316cca15281a4b36b63c520123baa256a545"
+uuid = "29dad682-9a27-4bc3-9c72-016788665182"
+version = "0.6.0"
 
 [[deps.RelocatableFolders]]
 deps = ["SHA", "Scratch"]
@@ -1733,6 +1849,11 @@ git-tree-sha1 = "387c1f73762231e86e0c9c5443ce3b4a0a9a0c2b"
 uuid = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
 version = "1.0.2"
 
+[[deps.Underscores]]
+git-tree-sha1 = "6e6de5a5e7116dcff8effc99f6f55230c61f6862"
+uuid = "d9a01c3f-67ce-4d8c-9b55-35f6e4050bb1"
+version = "3.0.0"
+
 [[deps.Unicode]]
 uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
 
@@ -2025,5 +2146,14 @@ version = "1.4.1+0"
 # ╠═7aabfba6-c645-4abf-928d-a41e2d96528b
 # ╠═b121f625-008e-4baf-a406-b8b25fe6536b
 # ╠═5370bffc-9596-4d67-bf56-34286c929be1
+# ╟─a9e1cbeb-da2e-4225-82fd-aecbe8913a72
+# ╠═77cc4886-cd4c-442d-8a1e-5e14937e55ea
+# ╟─61cd1de2-a756-49e8-be72-89bc20ca7624
+# ╠═e0beaa4b-f3f1-48b6-b20b-73e827385892
+# ╟─14c05116-ebea-4079-a6c2-76777e5d0e16
+# ╠═dfdaf13a-7295-45b0-9d0a-73894952857c
+# ╠═703fc569-e436-4f32-ac4a-22331aab0eb8
+# ╠═6bf07c03-7eb3-4e84-9bb8-4cf36c2539d0
+# ╠═afee4ab1-9470-4877-9a7e-daf7c3869c65
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
