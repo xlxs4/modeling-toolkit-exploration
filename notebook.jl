@@ -17,6 +17,9 @@ end
 # ╔═╡ 6bf07c03-7eb3-4e84-9bb8-4cf36c2539d0
 using DataInterpolations
 
+# ╔═╡ 2e8818b2-9c6a-428b-bc62-00e2327d1ce6
+using BenchmarkTools
+
 # ╔═╡ 6fa29060-7e58-11ed-0684-771304878d5f
 md"""
 ## Your very first ODE
@@ -348,11 +351,62 @@ Go nuts!
 """
 
 # ╔═╡ 14b6f597-e9c0-461a-9249-2ce852d9472a
+md"""
+## Symbolic and sparse derivatives
+Before wrapping this up, let's explore another cool goodie MTK has to offer.
+It all has to do with being able to do express things symbolically before moving on to converting and numerically solving problems.
+Recall that MTK embracing the symbolic side was what got us `structural_simplify` too.
 
+Because MTK is (among others) a symbolic toolkit, the derivatives can be calculated explicitly.
+The incidence matrix of PDEs can also be explicitly derived.
+If you're unfamiliar with it, the incidence matrix is used to represent the structure of the PDE and the relationships between the variables and the partial derivatives.
+The same applies for ODEs, etc.
+You can think of the incidence matrix as the "sparsity pattern".
+
+Because we can calculate these explicitly, we get a substantial speedup of all model calculations, e.g. when simulating a model over time using an ODE solver, as a treat!
+
+Note that, by default, the analytical derivatives and sparse matrixes, e.g. for the Jacobian, are not used.
+Let's benchmark:
+"""
+
+# ╔═╡ eca15cbb-f6db-4e44-8163-ba49b846dc8d
+@btime solve($connected_prob, Rodas4());
+
+# ╔═╡ c6a7499b-6990-4014-852c-416a268e8936
+md"""
+Rodas4 here is a fourth-order Rosenbrock method.
+It's a type of Runge-Kutta method, i.e. a class of algorithms for numerically approximating the solution to a DE.
+
+Let's now have MTK provide sparse, analytical derivatives to the solver.
+To do this, we must specify so during the construction of the `ODEProblem`:
+"""
+
+# ╔═╡ 2257a502-7d26-48f0-bcca-71d5cdc622b3
+prob_an = ODEProblem(connected_simplified, u0, (0.0, 10.0), p; jac = true, sparse = true);
+
+# ╔═╡ da66b912-12c0-45d3-8813-e3c76f4fc09f
+@btime solve($prob_an, Rodas4());
+
+# ╔═╡ dc9447b1-51ef-4a6a-9de8-ad9c27897485
+md"""
+Oh no!
+What happened?
+Well, for this small, dense model (3 of 4 entries are populated), using sparse matrices is counterproductive in terms of required memory allocations.
+However, for large, *hierarchically built* (i.e. composed out of smaller components) models, which tend to be sparse, the speedup and the reduction of memory allocation is often substantial.
+Going on a somewhat off-topic tangent, these problem builders allow for automatic parallelism using the structural information of the model, but that's for another notebook.
+
+There are several factors to decide on whether you should use sparse matrices, some of which are:
+1. Sparsity structure: The matrix representing the system of equations might have a natural sparsity structure, e.g. if it represents a network or a graph.
+2. Matrix size: If it's large or it has a lot of zero elements.
+3. Accuracy: Sparse matrices may not be as accurate as dense matrices in some cases, particularly if the matrix has a relatively smsall number of non-zero elements.
+Just try using both dense and sparse matrices and see what works best for the problem at hand.
+This can often has a sizeable impact, and it's a cool feature of MTK, so keep it in mind.
+"""
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 DataInterpolations = "82cc6244-b520-54b8-b5a6-8a565e85f1d0"
 DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
@@ -360,6 +414,7 @@ ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 
 [compat]
+BenchmarkTools = "~1.3.2"
 DataInterpolations = "~3.10.1"
 DifferentialEquations = "~7.6.0"
 LaTeXStrings = "~1.3.0"
@@ -373,7 +428,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.3"
 manifest_format = "2.0"
-project_hash = "615cd2466b44d97106674c2d640db731e5958e49"
+project_hash = "eac0d486aea8cd4115aba985ef665f945457edfc"
 
 [[deps.AbstractAlgebra]]
 deps = ["GroupsCore", "InteractiveUtils", "LinearAlgebra", "MacroTools", "Markdown", "Random", "RandomExtensions", "SparseArrays", "Test"]
@@ -476,6 +531,12 @@ uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 git-tree-sha1 = "aebf55e6d7795e02ca500a689d326ac979aaf89e"
 uuid = "9718e550-a3fa-408a-8086-8db961cd8217"
 version = "0.1.1"
+
+[[deps.BenchmarkTools]]
+deps = ["JSON", "Logging", "Printf", "Profile", "Statistics", "UUIDs"]
+git-tree-sha1 = "d9a9701b899b30332bbcb3e1679c41cce81fb0e8"
+uuid = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+version = "1.3.2"
 
 [[deps.Bijections]]
 git-tree-sha1 = "fe4f8c5ee7f76f2198d5c2a06d3961c249cce7bd"
@@ -1552,6 +1613,10 @@ version = "0.5.3"
 deps = ["Unicode"]
 uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
+[[deps.Profile]]
+deps = ["Printf"]
+uuid = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
+
 [[deps.Qt5Base_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Fontconfig_jll", "Glib_jll", "JLLWrappers", "Libdl", "Libglvnd_jll", "OpenSSL_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libxcb_jll", "Xorg_xcb_util_image_jll", "Xorg_xcb_util_keysyms_jll", "Xorg_xcb_util_renderutil_jll", "Xorg_xcb_util_wm_jll", "Zlib_jll", "xkbcommon_jll"]
 git-tree-sha1 = "0c03844e2231e12fda4d0086fd7cbe4098ee8dc5"
@@ -2293,6 +2358,12 @@ version = "1.4.1+0"
 # ╟─dceff93e-551c-46c0-9254-bf74815836d3
 # ╠═d839e32f-f920-46f5-af42-c72f3c884b73
 # ╟─3156c1ea-b1b0-4052-8e61-3f032642e70f
-# ╠═14b6f597-e9c0-461a-9249-2ce852d9472a
+# ╟─14b6f597-e9c0-461a-9249-2ce852d9472a
+# ╠═2e8818b2-9c6a-428b-bc62-00e2327d1ce6
+# ╠═eca15cbb-f6db-4e44-8163-ba49b846dc8d
+# ╟─c6a7499b-6990-4014-852c-416a268e8936
+# ╠═2257a502-7d26-48f0-bcca-71d5cdc622b3
+# ╠═da66b912-12c0-45d3-8813-e3c76f4fc09f
+# ╟─dc9447b1-51ef-4a6a-9de8-ad9c27897485
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
