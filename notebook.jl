@@ -133,7 +133,7 @@ This allows us to plot the right hand side of our equation, $\frac{h - x(t)}{\ta
 begin
 	simplified_prob = ODEProblem(fol_simplified, [x => 0.0], (0.0, 10.0), [τ => 3.0])
 	simplified_sol = solve(simplified_prob)
-	plot(simplified_sol, idxs=[x, RHS], label=["x(t)" L"\frac{h - x(t)}{\tau}"])
+	plot(simplified_sol, idxs=[x, RHS], label=["x(t)" L"\textbf{\frac{h - x(t)}{\tau}}"])
 end
 
 # ╔═╡ ab5c28a5-815f-485d-bf46-dc467322759e
@@ -228,6 +228,94 @@ begin
 	scatter!(ts, value_vector, label="f(t)")
 end
 
+# ╔═╡ dade5cc9-a511-4428-87b4-94d2a6160a35
+md"""
+## Building component-based, hierarchical models
+Let's now have a glimpse on another thing that makes MTK amazing — something that pairs well with [acausal modeling](https://xlxs4.github.io/notes/juliasim-model-optimizer/#acausal_modeling).
+Instead of tackling a complex system head on, you can compose it from simple systems, in a "modeling framework" kind of fashion.
+A best practive for such a framework could be to use factory functions:
+"""
+
+# ╔═╡ 52556aa2-b894-4808-8d70-ed5c96d4be89
+function fol_factory(separate=false; name)
+	@parameters τ
+	@variables t x(t) f(t) RHS(t)
+
+	eqs = separate ? [RHS ~ (f - x)/τ,
+					  D(x) ~ RHS] :
+					  D(x) ~ (f - x)/τ
+	return ODESystem(eqs; name)
+end
+
+# ╔═╡ 93aed201-60ee-40fd-bb17-a8493ca06384
+md"""
+This can help us create model components programmatically.
+We can instantiate the same component multiple times.
+Not only that, it allows for some customization:
+"""
+
+# ╔═╡ be81ba94-9e4e-4df8-8eff-c48c175f0ef7
+@named fol_1 = fol_factory()
+
+# ╔═╡ 8db94903-3fe5-4d4a-8ea1-7ba35ca7815d
+@named fol_2 = fol_factory(true) # has observable RHS
+
+# ╔═╡ ee686171-ee40-461b-8d7f-4613fed6d50f
+md"""
+Behind the scenes, the `@named` macro rewrites `fol_2 = fol_factory(true)` into `fol_2 = fol_factory(true,:fol_2)`.
+That's how `name` is used in `fol_factory`.
+We've created some components programmatically.
+Now, the two components `fol_1` and `fol_2` can be used to compose another.
+In other words, they can be used as subsystems of a parent system, i.e. one level higher in the model hierarchy.
+Since we're frequently dealing with physical systems, it might be intuitive to think about composing the components as "connecting" them.
+The connections between the components again are just algebraic relations:
+"""
+
+# ╔═╡ 2792a3a9-0677-479f-a9b9-2b77ffe73914
+begin
+	connections = [ fol_1.f ~ 1.5,
+					fol_2.f ~ fol_1.x ]
+
+	connected = compose(ODESystem(connections, name = :connected), fol_1, fol_2)
+end
+
+# ╔═╡ 132612ef-c3b6-4583-adc6-85df9523826a
+md"""
+While all the equations, variables and parameters are collected, the structure of the hierarchical model is still preserved.
+This means you can still get information about `fol_1`, by `connected.fol_1`, or its parameter, `τ`, by `connected.fol_1.τ`.
+We continue as we have previously: before simulation, we eliminate the algebraic variables and connection equations from the system using structural simplification:
+"""
+
+# ╔═╡ 7707229f-ae90-46af-8ae6-0d6b5bc04733
+begin
+	connected_simplified = structural_simplify(connected)
+	
+	full_equations(connected_simplified)
+end
+
+# ╔═╡ b0bc71c9-1660-47f8-a991-530e36b877c0
+md"""
+Now only the two state-derivative equations remain, as expected.
+That would be the case if you had manually eliminated as many variables as possible from the equations.
+We've used `full_equations` because, otherwise, some observed variables are not expanded.
+
+Since the hierarchical model structure is preserved, the initial state and the parameter values can be specified accordingly when building the `ODEProblem`.
+That's because everything that got eliminated is still tracked as an Observable, as we've previously seen with the `RHS` trick:
+"""
+
+# ╔═╡ bd7ef52f-7745-48fa-9d30-f8ec0505e66f
+begin
+	u0 = [ fol_1.x => -0.5,
+		   fol_2.x => 1.0 ]
+
+	p = [ fol_1.τ => 2.0,
+		  fol_2.τ => 4.0 ]
+
+	connected_prob = ODEProblem(connected_simplified, u0, (0.0, 10.0), p)
+	connected_sol = solve(connected_prob)
+	plot(connected_sol)
+end
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -251,7 +339,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.3"
 manifest_format = "2.0"
-project_hash = "b5ffb92e4cf5d4bdf60bb29aeea3f2fb5c3e5d1f"
+project_hash = "615cd2466b44d97106674c2d640db731e5958e49"
 
 [[deps.AbstractAlgebra]]
 deps = ["GroupsCore", "InteractiveUtils", "LinearAlgebra", "MacroTools", "Markdown", "Random", "RandomExtensions", "SparseArrays", "Test"]
@@ -2155,5 +2243,16 @@ version = "1.4.1+0"
 # ╠═703fc569-e436-4f32-ac4a-22331aab0eb8
 # ╠═6bf07c03-7eb3-4e84-9bb8-4cf36c2539d0
 # ╠═afee4ab1-9470-4877-9a7e-daf7c3869c65
+# ╟─dade5cc9-a511-4428-87b4-94d2a6160a35
+# ╠═52556aa2-b894-4808-8d70-ed5c96d4be89
+# ╟─93aed201-60ee-40fd-bb17-a8493ca06384
+# ╠═be81ba94-9e4e-4df8-8eff-c48c175f0ef7
+# ╠═8db94903-3fe5-4d4a-8ea1-7ba35ca7815d
+# ╟─ee686171-ee40-461b-8d7f-4613fed6d50f
+# ╠═2792a3a9-0677-479f-a9b9-2b77ffe73914
+# ╟─132612ef-c3b6-4583-adc6-85df9523826a
+# ╠═7707229f-ae90-46af-8ae6-0d6b5bc04733
+# ╟─b0bc71c9-1660-47f8-a991-530e36b877c0
+# ╠═bd7ef52f-7745-48fa-9d30-f8ec0505e66f
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
