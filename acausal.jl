@@ -13,7 +13,7 @@ end
 # ╔═╡ 92c62c66-430e-4ac5-bdd0-295e05d57b16
 md"""
 ## Modeling Paradigms
-As we've [previously seen](https://xlxs4.github.io/modeling-toolkit-exploration/introduction.html#dade5cc9-a511-4428-87b4-94d2a6160a35), MTK is an acausal modeling framework.
+As we've [previously seen](https://xlxs4.github.io/modeling-toolkit-exploration/introduction.html#dade5cc9-a511-4428-87b4-94d2a6160a35), MTK is an acausal (and causal) modeling framework.
 This means instead of tackling a complex system head on, you can compose it from simple systems. To better understand this, we need to briefly go over the two modeling paradigms, causal and acausal.
 """
 
@@ -40,12 +40,42 @@ This is more akin to the declarative programming paradigm.
 
 There's some key advantages to following the acausal modeling paradigm.
 Acausal modeling can be expressive.
-This allows ut to think like scientists and engineers instead of being limited in framing the problem only in terms of how to compute the results.
+This allows us to think like scientists and engineers instead of being limited in framing the problem only in terms of how to compute the results.
 Acausal modeling can also be concise.
 This can allow us to build large-scale models by connecting well-tested components.
 Lastly, acausal modeling can be reusable.
 We can bring these well-tested components and entier component models with us to build new systems.
 """
+
+# ╔═╡ 6b1c1de0-4e7d-41bf-a53b-bd18f69152a9
+md"""
+## Introduction
+Let's take a look at how we can build a hierarchical acausal component-based model of the RC circuit.
+An RC (resistor-capacitor) circuit at its simplest form consists of a resistor and a charged capacitor connected to one another in a single loop, without an external voltage source.
+These two components interact with each other to produce a range of electrical phenomena that are important in many practical applications, such as filters or oscillators.
+This simple circuit can be represented with this electrical diagram:
+
+![](https://github.com/xlxs4/modeling-toolkit-exploration/blob/main/assets/rc-circuit.png?raw=true)
+
+To see how the, time-dependent, voltage across the capacitor in this circuit fluctuates, a more traditional approach could be the following:
+Using [Kirchoff's current law](https://www.wikiwand.com/en/Kirchhoff's_circuit_laws#Kirchhoff's_current_law), we know that the current through the resistor must be equal in magnitude (but opposite in sign) to the time derivative of the accumulated charge on the capacitor.
+This gives this linear DE:
+
+$C\frac{dV}{dt} + \frac{V}{R} = 0$
+
+where $C$ is the capacitance.
+Solving for $V$ yields
+
+$V(t) = V_0e^{-\frac{t}{RC}}$
+
+That was a lengthy detour, but it will help put the process of acausal component-based modeling into context.
+We wish to build the RC circuit by building individual components and connecting the pins.
+That's an intuitive look into why this way of modeling can help us think like scientists or engineers.
+Let's explore!
+"""
+
+# ╔═╡ f86c4eac-5344-4b3c-9a8e-c49c1d54cba1
+
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -310,5 +340,7 @@ version = "17.4.0+0"
 # ╟─92c62c66-430e-4ac5-bdd0-295e05d57b16
 # ╟─4c5ff71c-dbe9-45ae-a069-1c4312c2814a
 # ╟─7414b201-7393-41ac-a4ce-491b96b86895
+# ╟─6b1c1de0-4e7d-41bf-a53b-bd18f69152a9
+# ╠═f86c4eac-5344-4b3c-9a8e-c49c1d54cba1
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
