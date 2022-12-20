@@ -316,6 +316,40 @@ begin
 	plot(connected_sol)
 end
 
+# ╔═╡ fe65dbff-cee9-4cf7-ac0a-0fa5e53c45bc
+md"""
+## Defaults
+Explicitly specifying the values for the initial state and the parameters of a model component each time we're trying to create an `ODEProblem` can get boring pretty fast.
+That's why often it's a good idea to specify reasonable values as defaults:
+"""
+
+# ╔═╡ 4b616798-3b40-47df-a694-23570beec7dd
+function unitstep_fol_factory(;name)
+	@parameters τ
+	@variables t x(t)
+	ODESystem(D(x) ~ (1 - x)/τ; name, defaults = Dict(x => 0.0, τ => 1.0))
+end
+
+# ╔═╡ dceff93e-551c-46c0-9254-bf74815836d3
+md"""
+Now creating the problem is less cumbersome.
+By the way, I like drawing from the FP world to use the piping operator, `|>`:
+"""
+
+# ╔═╡ d839e32f-f920-46f5-af42-c72f3c884b73
+ODEProblem(unitstep_fol_factory(name = :fol), [], (0.0, 5.0), []) |> solve |> plot
+
+# ╔═╡ 3156c1ea-b1b0-4052-8e61-3f032642e70f
+md"""
+The defaults can also be functions of the other variables.
+In that case, they get resolved to a concrete value at the time the problem is created.
+The factory function could accept additional arguments to optionally specify the initial state or parameter values, etc.
+Go nuts!
+"""
+
+# ╔═╡ 14b6f597-e9c0-461a-9249-2ce852d9472a
+
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -2254,5 +2288,11 @@ version = "1.4.1+0"
 # ╠═7707229f-ae90-46af-8ae6-0d6b5bc04733
 # ╟─b0bc71c9-1660-47f8-a991-530e36b877c0
 # ╠═bd7ef52f-7745-48fa-9d30-f8ec0505e66f
+# ╟─fe65dbff-cee9-4cf7-ac0a-0fa5e53c45bc
+# ╠═4b616798-3b40-47df-a694-23570beec7dd
+# ╟─dceff93e-551c-46c0-9254-bf74815836d3
+# ╠═d839e32f-f920-46f5-af42-c72f3c884b73
+# ╟─3156c1ea-b1b0-4052-8e61-3f032642e70f
+# ╠═14b6f597-e9c0-461a-9249-2ce852d9472a
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
