@@ -264,7 +264,7 @@ function fol_factory(separate=false; name)
 	eqs = separate ? [RHS ~ (f - x)/τ,
 					  D(x) ~ RHS] :
 					  D(x) ~ (f - x)/τ
-	return ODESystem(eqs; name)
+	ODESystem(eqs; name)
 end
 
 # ╔═╡ 93aed201-60ee-40fd-bb17-a8493ca06384
