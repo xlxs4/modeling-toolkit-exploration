@@ -212,6 +212,17 @@ begin
 	plot(external_sol, idxs=[x,f])
 end
 
+# ╔═╡ 1e03c6a4-845a-48ee-bd4f-1b7bd3d44f59
+md"""
+As a more practical example, you can consider interpolating a time series instead!
+Let's use [DataInterpolations.jl](https://github.com/PumasAI/DataInterpolations.jl) for that.
+"""
+
+# ╔═╡ 4098e6e2-f64c-441f-a2c8-a2969aaacbd8
+md"""
+Et voilà!
+"""
+
 # ╔═╡ afee4ab1-9470-4877-9a7e-daf7c3869c65
 begin
 	function interpolate_time_series(t, times, values)
@@ -428,7 +439,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.3"
 manifest_format = "2.0"
-project_hash = "eac0d486aea8cd4115aba985ef665f945457edfc"
+project_hash = "e21124019634ebae90f43f8d597d9b3d3f9030f9"
 
 [[deps.AbstractAlgebra]]
 deps = ["GroupsCore", "InteractiveUtils", "LinearAlgebra", "MacroTools", "Markdown", "Random", "RandomExtensions", "SparseArrays", "Test"]
@@ -2340,7 +2351,9 @@ version = "1.4.1+0"
 # ╟─14c05116-ebea-4079-a6c2-76777e5d0e16
 # ╠═dfdaf13a-7295-45b0-9d0a-73894952857c
 # ╠═703fc569-e436-4f32-ac4a-22331aab0eb8
+# ╟─1e03c6a4-845a-48ee-bd4f-1b7bd3d44f59
 # ╠═6bf07c03-7eb3-4e84-9bb8-4cf36c2539d0
+# ╟─4098e6e2-f64c-441f-a2c8-a2969aaacbd8
 # ╠═afee4ab1-9470-4877-9a7e-daf7c3869c65
 # ╟─dade5cc9-a511-4428-87b4-94d2a6160a35
 # ╠═52556aa2-b894-4808-8d70-ed5c96d4be89
