@@ -27,6 +27,26 @@ Here we're worried about the flow of computation — one could draw an analogy b
 An example could be a causal [Block diagram](https://www.mathworks.com/help/simulink/gs/simulink-block-diagrams.html) in [Simulink](https://www.mathworks.com/products/simulink.html), where each block represents a component and the connections between the blocks represent the flow of information between those components.
 """
 
+# ╔═╡ 7414b201-7393-41ac-a4ce-491b96b86895
+md"""
+### Acausal Modeling
+In contrast, in acausal modeling we describe the behavior and the properties of the model components.
+Then, the models are built up out of the composition of the components.
+The overall dynamics of the model fall out of the cumulative behavior of the composition.
+We only worry about the connections and the relationships between these functional blocks — we don't want to frame the problem particularly in terms of the flow of computation that has to happen.
+Instead, we want to think about individual components and the relationships between one another.
+Acausal models describe undirected algebraic relationships between functional blocks.
+This is more akin to the declarative programming paradigm.
+
+There's some key advantages to following the acausal modeling paradigm.
+Acausal modeling can be expressive.
+This allows ut to think like scientists and engineers instead of being limited in framing the problem only in terms of how to compute the results.
+Acausal modeling can also be concise.
+This can allow us to build large-scale models by connecting well-tested components.
+Lastly, acausal modeling can be reusable.
+We can bring these well-tested components and entier component models with us to build new systems.
+"""
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -289,5 +309,6 @@ version = "17.4.0+0"
 # ╠═7ce63b4e-8047-11ed-2a4c-e762bcd841b3
 # ╟─92c62c66-430e-4ac5-bdd0-295e05d57b16
 # ╟─4c5ff71c-dbe9-45ae-a069-1c4312c2814a
+# ╟─7414b201-7393-41ac-a4ce-491b96b86895
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
