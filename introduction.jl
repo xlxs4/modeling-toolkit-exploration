@@ -4,6 +4,12 @@
 using Markdown
 using InteractiveUtils
 
+# ╔═╡ 813af976-0c24-4831-b750-b775e7fe8078
+begin
+	using PlutoUI
+	TableOfContents(title = "Introduction to ModelingToolkit")
+end
+
 # ╔═╡ b47acfc8-0f96-49e5-840f-eba2db7414a2
 using ModelingToolkit
 
@@ -423,6 +429,7 @@ DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 
 [compat]
 BenchmarkTools = "~1.3.2"
@@ -431,6 +438,7 @@ DifferentialEquations = "~7.6.0"
 LaTeXStrings = "~1.3.0"
 ModelingToolkit = "~8.38.0"
 Plots = "~1.38.0"
+PlutoUI = "~0.7.49"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -439,13 +447,19 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.3"
 manifest_format = "2.0"
-project_hash = "e21124019634ebae90f43f8d597d9b3d3f9030f9"
+project_hash = "8c6d8ab4ed862903403c6c33663f17b52b2a41af"
 
 [[deps.AbstractAlgebra]]
 deps = ["GroupsCore", "InteractiveUtils", "LinearAlgebra", "MacroTools", "Markdown", "Random", "RandomExtensions", "SparseArrays", "Test"]
 git-tree-sha1 = "7772df04fda9bc25a44c9ef61e9dc7c92bb35d86"
 uuid = "c3fe647b-3220-5bb0-a1ea-a7954cac585d"
 version = "0.27.7"
+
+[[deps.AbstractPlutoDingetjes]]
+deps = ["Pkg"]
+git-tree-sha1 = "8eaf9f1b4921132a4cff3f36a1d9ba923b14a481"
+uuid = "6e696c72-6542-2067-7265-42206c756150"
+version = "1.1.4"
 
 [[deps.AbstractTrees]]
 git-tree-sha1 = "52b3b436f8f73133d7bc3a6c71ee7ed6ab2ab754"
@@ -1064,6 +1078,24 @@ git-tree-sha1 = "709d864e3ed6e3545230601f94e11ebc65994641"
 uuid = "34004b35-14d8-5ef3-9330-4cdb6864b03a"
 version = "0.3.11"
 
+[[deps.Hyperscript]]
+deps = ["Test"]
+git-tree-sha1 = "8d511d5b81240fc8e6802386302675bdf47737b9"
+uuid = "47d2ed2b-36de-50cf-bf87-49c2cf4b8b91"
+version = "0.0.4"
+
+[[deps.HypertextLiteral]]
+deps = ["Tricks"]
+git-tree-sha1 = "c47c5fa4c5308f27ccaac35504858d8914e102f9"
+uuid = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
+version = "0.9.4"
+
+[[deps.IOCapture]]
+deps = ["Logging", "Random"]
+git-tree-sha1 = "f7be53659ab06ddc986428d3a9dcc95f6fa6705a"
+uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
+version = "0.2.2"
+
 [[deps.IfElse]]
 git-tree-sha1 = "debdd00ffef04665ccbb3e150747a77560e8fad1"
 uuid = "615f187c-cbe4-4ef1-ba3b-2fcf58d6d173"
@@ -1346,6 +1378,11 @@ git-tree-sha1 = "f63e9022be00102b6d135b3363680e5befa8e227"
 uuid = "bdcacae8-1622-11e9-2a5c-532679323890"
 version = "0.12.142"
 
+[[deps.MIMEs]]
+git-tree-sha1 = "65f28ad4b594aebe22157d6fac869786a255b7eb"
+uuid = "6c6e2e6c-3030-632d-7369-2d6c69616d65"
+version = "0.1.4"
+
 [[deps.MLStyle]]
 git-tree-sha1 = "060ef7956fef2dc06b0e63b294f7dbfbcbdc7ea2"
 uuid = "d8e11817-5142-5d16-987a-aa16d5891078"
@@ -1577,6 +1614,12 @@ deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers"
 git-tree-sha1 = "513084afca53c9af3491c94224997768b9af37e8"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 version = "1.38.0"
+
+[[deps.PlutoUI]]
+deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
+git-tree-sha1 = "eadad7b14cf046de6eb41f13c9275e5aa2711ab6"
+uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+version = "0.7.49"
 
 [[deps.PoissonRandom]]
 deps = ["Random"]
@@ -2322,6 +2365,7 @@ version = "1.4.1+0"
 """
 
 # ╔═╡ Cell order:
+# ╠═813af976-0c24-4831-b750-b775e7fe8078
 # ╟─6fa29060-7e58-11ed-0684-771304878d5f
 # ╠═b47acfc8-0f96-49e5-840f-eba2db7414a2
 # ╠═e490813f-6741-488a-8819-6173e742d019
