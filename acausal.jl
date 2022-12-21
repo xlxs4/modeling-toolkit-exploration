@@ -228,7 +228,8 @@ We're done!
 We have all the components we need.
 Well, *technically* we do, but we need one more thing: we need to build a constant voltage electrical source term.
 We can think of this as similarly being a two pin object, where the object itself is kept at a constant voltage.
-The reason we want this is, because it's kept at a constant voltage, it will essentially be generating the electrical current.
+The reason we want this is, well, we need a source.
+Because it's kept at a constant voltage, it will essentially be generating the electrical current.
 Building the component should be fairly straightforward by now:
 """
 
@@ -242,6 +243,100 @@ function ConstantVoltage(;name, V = 1.0)
 		  ]
 	extend(ODESystem(eqs, t, [], ps; name = name), oneport)
 end
+
+# ╔═╡ 23e8e37d-3926-4857-be30-a17553d4131a
+md"""
+Let's reflect upon what we did.
+We've created a bunch of layered abstractions and ultimatelly defined each and every one of the component we need.
+Because it's all just Julia code, nothing stops us from putting them in a file and exporting the definitions.
+That way, the next time we'll need to model something that also consists of a `Resistor`, we'll be able to reuse what we already have.
+That's so cool!
+It means every time we model something, we involuntarily expand our own personal library of reusable components to build models with!
+And, of course, nothing stops you from sharing these.
+The world is your oyster.
+
+Let's get back on track now.
+"""
+
+# ╔═╡ 42f4fd88-6a6c-46fa-91b8-c41d99e5ff5d
+md"""
+## Connecting and Simulating Our Electrical Circuit
+Now that we've done all of this hard work, let's see how easy it is to build our model (or any future models that use these components, for that matter).
+We're ready to simulate our circuit.
+Let's first build our four components: a `resistor`, `capacitor`, `source` and `ground` term.
+Let's make all of our parameter values 1, for simplicity:
+"""
+
+# ╔═╡ 12bf99b0-40cd-43c3-ac0e-b0be0a834b94
+begin
+	R = 1.0
+	C = 1.0
+	V = 1.0
+	@named resistor = Resistor(R = R)
+	@named capacitor = Capacitor(C = C)
+	@named source = ConstantVoltage(V = V)
+	@named ground = Ground()
+end
+
+# ╔═╡ 62f2b9a1-860a-4432-9583-7451e4fe0546
+md"""
+In the real world, when we want to build an electrical circuit, after we've gathered our components, what do we need to do?
+To connect them.
+Just like connecting LEGO bricks.
+So let's finally connect the pieces of our circuit together.
+We need to connect the positive pin of the resistor to the source, the negative pin of the resistor to the capacitor, and the negative pin of the capacitor to a junction between the source and the ground.
+Getting our connection equations is as easy as:
+"""
+
+# ╔═╡ 55c3321a-146f-400d-8d42-6dec81e2ccc2
+rc_eqs = [
+		  connect(source.p, resistor.p)
+		  connect(resistor.n, capacitor.p)
+		  connect(capacitor.n, source.n)
+		  connect(capacitor.n, ground.g)
+		 ]
+
+# ╔═╡ 7db1553c-8064-40d3-a179-38d9f0810fe4
+md"""
+We have everything we need to build our four-component model with these connection rules:
+"""
+
+# ╔═╡ 223dd794-42a9-45fc-88b7-77c84986b569
+@named rc_model = ODESystem(rc_eqs, t,
+							systems = [resistor, capacitor, source, ground])
+# This is like doing
+# @named _rc_model = ODESystem(rc_eqs, t)
+# @named rc_model = compose(_rc_model,
+#                           [resistor, capacitor, source, ground])
+# but it's simpler to just specify the subsystems in a vector as we did.
+
+# ╔═╡ 03e38a9e-38e6-4911-ae45-fee8eff57eea
+md"""
+We got ourselves a model!
+Note: this model is acausal because we haven't specified anything about the causality of the model.
+We have simply specified what holds true about each of the variables, nothing more.
+This forms a system of differential-algebraic equations (DAEs) which define the evolution of each state of the system.
+Here are our equations:
+"""
+
+# ╔═╡ b30ac2e1-ffbb-436b-ad44-c065e60d793a
+equations(expand_connections(rc_model))
+
+# ╔═╡ aeeb391c-57a4-445b-bbdb-c83c89c940a7
+md"""
+... and here are our states:
+"""
+
+# ╔═╡ 59a4636b-ce63-4baa-8197-579298729eb3
+states(rc_model)
+
+# ╔═╡ 8c27d273-9e36-403f-8dd0-279c49fb50d8
+md"""
+Last, as expected, our parameters are:
+"""
+
+# ╔═╡ 8867225d-7725-49c5-bef1-9f89c705591e
+parameters(rc_model)
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -260,7 +355,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.3"
 manifest_format = "2.0"
-project_hash = "7188ea3bb302eba0e80861dc474f275e836a8e3d"
+project_hash = "46877843ded1fffe88e5c9f142ce9f93d11c1095"
 
 [[deps.AbstractAlgebra]]
 deps = ["GroupsCore", "InteractiveUtils", "LinearAlgebra", "MacroTools", "Markdown", "Random", "RandomExtensions", "SparseArrays", "Test"]
@@ -1367,5 +1462,18 @@ version = "17.4.0+0"
 # ╠═448ef378-fe68-4d4e-91ba-b9f983556ff8
 # ╟─e13d39a7-593d-40a6-b080-477ddbe2c8f9
 # ╠═d861ea36-0de2-41fb-974f-e9acd2396da2
+# ╟─23e8e37d-3926-4857-be30-a17553d4131a
+# ╟─42f4fd88-6a6c-46fa-91b8-c41d99e5ff5d
+# ╠═12bf99b0-40cd-43c3-ac0e-b0be0a834b94
+# ╟─62f2b9a1-860a-4432-9583-7451e4fe0546
+# ╠═55c3321a-146f-400d-8d42-6dec81e2ccc2
+# ╟─7db1553c-8064-40d3-a179-38d9f0810fe4
+# ╠═223dd794-42a9-45fc-88b7-77c84986b569
+# ╟─03e38a9e-38e6-4911-ae45-fee8eff57eea
+# ╠═b30ac2e1-ffbb-436b-ad44-c065e60d793a
+# ╟─aeeb391c-57a4-445b-bbdb-c83c89c940a7
+# ╠═59a4636b-ce63-4baa-8197-579298729eb3
+# ╟─8c27d273-9e36-403f-8dd0-279c49fb50d8
+# ╠═8867225d-7725-49c5-bef1-9f89c705591e
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
