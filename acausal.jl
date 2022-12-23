@@ -50,7 +50,7 @@ This allows us to think like scientists and engineers instead of being limited i
 Acausal modeling can also be concise.
 This can allow us to build large-scale models by connecting well-tested components.
 Lastly, acausal modeling can be reusable.
-We can bring these well-tested components and entier component models with us to build new systems.
+We can bring these well-tested components and entire component models with us to build new systems.
 """
 
 # ╔═╡ 6b1c1de0-4e7d-41bf-a53b-bd18f69152a9
@@ -75,8 +75,10 @@ Solving for $V$ yields
 $V(t) = V_0e^{-\frac{t}{RC}}$
 
 That was a lengthy detour, but it will help put the process of acausal component-based modeling into context.
+Why do we care if it's just a simple linear DE?
 We wish to build the RC circuit by building individual components and connecting the pins.
 That's an intuitive look into why this way of modeling can help us think like scientists or engineers.
+If we write all the components, and then just simply connect them together, we don't even have to think about writing the DE.
 Let's explore!
 """
 
@@ -97,7 +99,7 @@ In other words, the currents should sum to zero and the voltages across the pins
 """
 
 # ╔═╡ a08714f5-f3b1-45b9-b35f-4555a1803da1
-@variables t;
+@variables t; # we define our independent variable first
 
 # ╔═╡ 7233f6a1-9915-4b30-bd3a-9f82c7ad70ac
 @connector function Pin(;name)
@@ -133,6 +135,9 @@ Recall we can also use the `@named` helper macro shown previously:
 md"""
 Now that we have our connector, we can start giving form to our components.
 Let's build our ground node first.
+Why?
+Because otherwise everything in the circuit is in relative terms — the circuit is only defined by voltage differences but there is no definition of where the voltage is actually 0.
+We need a ground component for the system to have a unique solution.
 A ground node is just a pin that is connected to a constant voltage reservoir, typically taken to be `V = 0`.
 Thus, to define this component, we generate an `ODESystem` with a `Pin` subcomponent and specify that the voltage in this `Pin` is equal to zero:
 """
@@ -148,17 +153,23 @@ end
 md"""
 Again, note that components are `ODESystems`.
 What `compose` does is self-explanatory: it `compose`s multiple systems together.
+Instead of just saying hey, pin is a subsystem, we're using this compose primitive to build a system with the two components together.
 The resulting system would inherit the first system's name, which is why we're first passing our newly-constructed system and then our `Pin`.
+As a reminder, what `@named` does above is essentially expand into `g = Pin(;name = :g)`.
+What all these macros, `@variable`, `@name`, are doing, is they're making it so the names of the symbolic things that are computationally happening match the names that you have in the Julia code.
+In theory they can actually be different names, e.g. when you're using this to build libraries, you might want the name from the user.
+You use the macros for the naming to happen automatically.
 
 We can jump in on creating our other components, but this is a great opportunity to highlight an important concept in doing acausal work with MTK.
 Because we can compose our models bottom-up with modular, reusable components, we can better structure our model by leveraging abstraction.
 So instead, we'll first define a one-port component.
-A one-port is a circuit element that has a single input and a single output port — it's a basic building block in electrical circuit theory and can be used to model a widde range of passive and active devices, including resistors and capacitors.
+A one-port is a circuit element that has a single input and a single output port — it's a basic building block in electrical circuit theory and can be used to model a wide range of passive and active devices, including resistors and capacitors.
 
 We build a `OnePort` component — essentially an abstraction for all simple electrical component with two `Pin`s.
+It only declares the boundary conditions.
 The voltage of the component is the voltage difference between the positive and the negative pin.
-We know that the current between the two pins must sum to zero.
-The current of the component equals to the current of the positive pin:
+We know that the current between the two pins must sum to zero — the component doesn't have any current storage.
+And, because there's no current storage, the current of the component equals to the current of the positive pin:
 """
 
 # ╔═╡ 61432d4b-ea23-4fbe-b283-5e6c30ea0c58
@@ -205,10 +216,15 @@ This will be the value of the resistance no matter what.
 The second, is the use of `@unpack` and `extend`.
 In our `Resistor` component, we simply want to inherit `OnePort`'s equations and states and extend them with one more new equation.
 `compose` is for composing with a system, `extend` is for inheriting from a system.
+
 By default, ModelingToolkit makes a new, namespaced variable `oneport₊v(t)` when using the syntax  `oneport.v`.
 That's inheritance in action.
 See [the introduction notebook](https://xlxs4.github.io/modeling-toolkit-exploration/introduction.html#dade5cc9-a511-4428-87b4-94d2a6160a35) for an example (e.g., `fol₁₊ₓ`).
 We're using `@unpack` to avoid the namespacing.
+
+Why `R=R`?
+The left hand side is the symbolic variable.
+So we're defining a symbolic parameter that has a default value R, where in the RHS R is the function argument.
 
 We can construct our `Capacitor` in a similar manner:
 """
@@ -233,6 +249,7 @@ Well, *technically* we do, but we need one more thing: we need to build a consta
 We can think of this as similarly being a two pin object, where the object itself is kept at a constant voltage.
 The reason we want this is, well, we need a source.
 Because it's kept at a constant voltage, it will essentially be generating the electrical current.
+In other words, we need to have a battery in our circuit.
 Building the component should be fairly straightforward by now:
 """
 
@@ -377,13 +394,13 @@ Now, we can give the values for the initial conditions of our stateas and solve 
 
 # ╔═╡ 66ed2871-8cb0-4473-b54e-5a1f1b757a9e
 begin
-	u0 = [
+	_u0 = [
 		  capacitor.v => 0.0
 		  capacitor.p.i => 0.0
 		 ]
-	prob = ODEProblem(sys, u0, (0, 10.0))
-	sol = solve(prob, Rodas4())
-	plot(sol)
+	_prob = ODEProblem(sys, _u0, (0, 10.0))
+	_sol = solve(_prob, Rodas4())
+	plot(_sol)
 end
 
 # ╔═╡ 79c048a4-6bcd-4623-81d3-423a941faa58
@@ -395,12 +412,12 @@ Because we've run `structural_simplify`, MTK can numerically solve all the unred
 
 # ╔═╡ 9108da8c-a1eb-45ae-aac1-51d73abc8a87
 begin
-	_u0 = [
+	u0 = [
 		   capacitor.v => 0.0
 		  ]
-	_prob = ODAEProblem(sys, _u0, (0, 10.0))
-	_sol = solve(_prob, Rodas4())
-	plot(_sol)
+	prob = ODAEProblem(sys, u0, (0, 10.0))
+	sol = solve(prob, Rodas4())
+	plot(sol)
 end
 
 # ╔═╡ b5037ff6-960c-4f7b-bcae-1fa58e061049
@@ -460,7 +477,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.3"
 manifest_format = "2.0"
-project_hash = "60e69f24bcf902be6a51ef7f9c002f176d18b215"
+project_hash = "55210daf51a2d05d55a4868227c83784a637db37"
 
 [[deps.AbstractAlgebra]]
 deps = ["GroupsCore", "InteractiveUtils", "LinearAlgebra", "MacroTools", "Markdown", "Random", "RandomExtensions", "SparseArrays", "Test"]
