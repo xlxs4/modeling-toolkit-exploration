@@ -100,6 +100,7 @@ It sounds like a good thing to have when writing programs, or, as a parenthesis 
 It's hard to not think of the amazing Gerry, [Gerald Jay Sussman](http://groups.csail.mit.edu/mac/users/gjs/gjs.html).
 As he says in the fantastatic ["We Really Don't Know How to Compute!"](https://www.youtube.com/watch?v=HB5TrK7A4pI&) lecture, we should focus on writing evolvable programs that over time can transcend their designer and the original scope and intent with which they were written.
 To do that, we need to look more into composition and abstraction.
+
 What about [SICP](https://mitpress.mit.edu/9780262510875/structure-and-interpretation-of-computer-programs/) [^3]?
 Or the [Adventures in Advanced Symbolic Programming](http://groups.csail.mit.edu/mac/users/gjs/6.945/)?
 Or [Software Design for Flexibility](https://mitpress.mit.edu/9780262045490/) [^4]?
@@ -231,9 +232,56 @@ begin
 	plot(sol, title="Chua's Circuit")
 end
 
-# ╔═╡ 4a84564f-60ec-4d19-9443-b3adee6914d5
+# ╔═╡ a0925f1e-0eb8-46fa-9d00-b0d762ffe05b
 md"""
-And visualize:
+## Building Large-Scale Models Programmatically
+Again, a topic to go in more detail another time.
+But.
+In the [introduction notebook](https://xlxs4.github.io/modeling-toolkit-exploration/introduction.html#dade5cc9-a511-4428-87b4-94d2a6160a35) we've seen how we can write Julia (as always) code to then create components programmatically.
+We can take advantage of the fact that everything happens in exposed Julia code to programmatically build way bigger models.
+
+Let's take a look at another, more large-scale example — a model of a real-life building. This building exists. It's somewhere in Phoenix, Arizona. It is an 81-room building, 9 by 3 by 3. It's cooled by circulating water at 5 degrees Celsius. In the graphs below you can see real meteorological data.
+
+![A real-world building can have a Digital Twin.](https://xlxs4.github.io/notes/juliasim-model-optimizer/assets/building-model.png)
+
+More specifically, the image on the left, the building, correlates to where the vertical line is as it's moving across the two graphs on the right. On the top is the room temperature for each room being plotted. On the bottom is the ambient temperature. You can note that there are 7 visible peaks and valleys on the bottom graph, which correlates with 7 sunrises and falls during the week. Therefore, we can see the time of day and how it affects both ambient temperature and room temperature.
+
+Assume we have a package or collection of source files we've developed ourselves to break down this problem into smaller portions.
+Some example code:
+```julia
+@variables t
+
+eqns = Equation[]
+for i in 1:N_rooms
+	push!(eqns, connect(fan_coils[i].airPort_b, rooms[i].airPort_in))
+	push!(eqns, connect(rooms[i].airPort_out, fan_coils[i].airPort_a))
+	# connect source terms
+	push!(eqns, connect(Q_sensibles[i].y, rooms[i].Q_sensibles))
+	push!(eqns, connect(speeds[i].y, fan_coils[i].speed))
+	push!(eqns, connect(T_fluids[i].y, fan_coils[i].T_fluid))
+	push!(eqns, connect(m_flow_fluids[i].y, fan_coils[i].m_flow_fluid))
+end
+
+@named sys = ODESystem(eqns, t)
+@named sysModel = compose(sys, [fan_coils; rooms; T_ambient; Q_sensibles;
+								T_fluids; m_flow_fluids; speeds; fan_coils])
+```
+"""
+
+# ╔═╡ 2d09aff5-c60d-4f27-b2c8-8937e451ba56
+md"""
+Very similar to how we would just pull in the `Capacitor`s, the `Inductor`, the `Ground` source, we can pull in our interpolated sources, our constant sources, our step courses...
+We even have a function to create a HEX fan there.
+We can create many of the components in one go, as you can see in the array syntax above.
+
+Notice how we can do everything in a concise, fast way because we're able to do all of this inside a `for` loop.
+We're going over each room and setting up the equations and the connections for every room in the building without having to code all this by hand.
+The output is, as always, an `ODESystem`.
+
+That's a topic we can look into in great, great detail.
+We've still haven't covered how, e.g. metaprogramming can help us do even more great stuff when it comes to programmaticallly building components and models.
+
+The Digital Twin and the Chua circuit example were adapted from a JuliaSim seminar [I attended](https://xlxs4.github.io/notes/juliasim-model-optimizer/) some time ago.
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -2056,6 +2104,7 @@ version = "1.4.1+0"
 # ╠═c54595b5-1abc-464e-a0f6-f5e7e6abd7bb
 # ╟─145813db-d050-43b8-84df-f7af589ce100
 # ╠═395fee56-c414-46b1-9fd9-8ac39076cfd8
-# ╟─4a84564f-60ec-4d19-9443-b3adee6914d5
+# ╟─a0925f1e-0eb8-46fa-9d00-b0d762ffe05b
+# ╟─2d09aff5-c60d-4f27-b2c8-8937e451ba56
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
