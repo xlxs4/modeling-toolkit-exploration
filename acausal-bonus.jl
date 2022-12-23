@@ -93,13 +93,18 @@ Let's go over to the newly emerging field of Synthetic Biology, or SynBio for a 
 
 Some of the cool labs in the field try to do what is essentially the same thing: find a way to standardize procedures (e.g. take a look at [^2]) that allow for the creation of self-contained, modular and highly reusable components, or parts, that can be then used by other to be `compose`d with other parts or to `extend` already-existing constructs.
 
+![The MoClo YTK protocol](https://raw.githubusercontent.com/xlxs4/modeling-toolkit-exploration/main/assets/moclo-ytk.png)
+
 Hmm, okay, what else?
 Well, I've already stretched that this allows us to have an accumulating wealth of information, and characteristics like reusability help accelarate the growth of this "library" and facilitate its creation.
-What does this sound?
+How does this sound?
 It sounds like a good thing to have when writing programs, or, as a parenthesis wizard put it, conjuring and taming spirits.
 It's hard to not think of the amazing Gerry, [Gerald Jay Sussman](http://groups.csail.mit.edu/mac/users/gjs/gjs.html).
 As he says in the fantastatic ["We Really Don't Know How to Compute!"](https://www.youtube.com/watch?v=HB5TrK7A4pI&) lecture, we should focus on writing evolvable programs that over time can transcend their designer and the original scope and intent with which they were written.
 To do that, we need to look more into composition and abstraction.
+
+> The acts of the mind, wherein it exerts its power over simple ideas, are chiefly these three: 1. Combining several simple ideas into one compound one, and thus all complex ideas are made. 2. The second is bringing two ideas, whether simple or complex, together, and setting them by one another so as to take a view of them at once, without uniting them into one, by which it gets all its ideas of relations. 3. The third is separating them from all other ideas that accompany them in their real existence: this is called abstraction, and thus all its general ideas are made.
+— John Locke, *An Essay Concerning Human Understanding* (1690)
 
 What about [SICP](https://mitpress.mit.edu/9780262510875/structure-and-interpretation-of-computer-programs/) [^3]?
 Or the [Adventures in Advanced Symbolic Programming](http://groups.csail.mit.edu/mac/users/gjs/6.945/)?
@@ -107,7 +112,12 @@ Or [Software Design for Flexibility](https://mitpress.mit.edu/9780262045490/) [^
 From the guy that wore a wizard hat while teaching to HP employees with 8-bit Bach renditions playing in the background, and who built hardware [^5] and software to numerically evolve the solar system for 100 million years and prove that its evolution is chaotic [^6], we should heed his words.
 The techniques that Julia allows for, with it's powerful metaprogramming, LISP-like homoiconicity and multiple dispatch, are to me perfectly leveraged through this component-based modeling approach and MTK as a domain-specific language (DSL) framework.
 
-And maybe, just maybe, if we can programmatically handle components, and if they all abide by a lean, well-behaved interface, maybe we can pass them as input to evolutionary algorithms and NN operators.
+> Computational processes are abstract beings that inhabit computers. As they evolve, processes manipulate other abstract things called data. The evolution of a process is directed by a pattern of rules called a program. People create programs to direct processes. In effect, we conjure the spirits of the computer with our spells.
+> [...] indeed much like a sorcerer's idea of a spirit. It cannot be seen or touched. It is not composed of matter at all. However, it is very real. It can perform intellectual work. It can answer questions. It can affect the world. [...] The programs we use to conjure processes are like a sorcerer's spells. They are carefully composed from symbolic expressions in arcane and esoteric programming languages that prescribe the tasks we want our processes to perform.
+> [...] Master software engineers have the ability to organize programs [...] Well-designed computational systems [...] are designed in a modular manner, so that the parts can be constructed, replaced, and debugged separately.
+— Harold Abelson & Gerald Jay Sussman, *Structure and Interpretation of Computer Programs* (1996)
+
+And maybe, just maybe, if we can programmatically handle components, and if they all abide by a lean, well-behaved interface, maybe we can pass them as input to evolutionary algorithms and Differentiation operators.
 Why not?
 
 [^1]: Benner, S. A., & Sismour, A. M. (2005). Synthetic biology. *Nature reviews genetics, 6*(7), 533-543.
@@ -307,7 +317,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.3"
 manifest_format = "2.0"
-project_hash = "4ba51224a782205aae8c9bebf5375830c40db3b9"
+project_hash = "5b22da36682e2de25328c8c8c7e92143a18038af"
 
 [[deps.AbstractAlgebra]]
 deps = ["GroupsCore", "InteractiveUtils", "LinearAlgebra", "MacroTools", "Markdown", "Random", "RandomExtensions", "SparseArrays", "Test"]
