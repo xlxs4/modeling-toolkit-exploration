@@ -149,7 +149,7 @@ The ease of construction of the circuit has made it a ubiquitous real-world exam
 
 In order to get this chaotic behavior, we need to satisfy a couple requirements.
 
-![Chua's circuit diagram](https://raw.githubusercontent.com/xlxs4/chua-circuit/main/diagram.png)
+![Chua's circuit diagram](https://raw.githubusercontent.com/xlxs4/modeling-toolkit-exploration/main/assets/chua-circuit.jpg)
 
 We need at least one nonlinear element if you look at the diagram above, and that's what $N_R$ stands for, our nonlinear resistor.
 We need at least one locally active resistor, which is also $N_R$ in the diagram.
