@@ -456,6 +456,26 @@ And now let's plot it:
 # ╔═╡ efd549b6-fc1c-4254-92ad-20cf7c837763
 plot(sol, idxs=[resistor.v])
 
+# ╔═╡ 0993d896-76f1-429f-b045-8febc589654e
+md"""
+So how do both the capacitor and the resistor voltage evolve over time?
+The answer is, as expected:
+"""
+
+# ╔═╡ fbdefbe2-7697-4869-931a-3b3514c53bee
+plot(sol, idxs=[capacitor.v, resistor.v])
+
+# ╔═╡ 0098addf-ad2b-4b48-9eba-6d74fa7d1876
+md"""
+So, if you haven't done acausal modeling before, you're basically saying "oh I know these voltages are the same", "I know these currents add together".
+It's a series of "I know this" and "I know that", e.g. "I know Ohm's Law".
+So you list all of the truths, the rules that you know hold up.
+Then you say "get rid of all the redundant equations and solve it for me".
+And it does.
+And any of the variables you want will be in the solution.
+Acausal modeling is a very nice formalism and it's a subset of what MTK can handle.
+"""
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -2395,5 +2415,8 @@ version = "1.4.1+0"
 # ╠═3985a4bc-6695-423d-adbb-5c150da0af5f
 # ╟─14679712-b2a0-489c-bd52-09e0bd2553c9
 # ╠═efd549b6-fc1c-4254-92ad-20cf7c837763
+# ╟─0993d896-76f1-429f-b045-8febc589654e
+# ╠═fbdefbe2-7697-4869-931a-3b3514c53bee
+# ╟─0098addf-ad2b-4b48-9eba-6d74fa7d1876
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
