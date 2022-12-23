@@ -420,6 +420,33 @@ Just try using both dense and sparse matrices and see what works best for the pr
 This can often has a sizeable impact, and it's a cool feature of MTK, so keep it in mind.
 """
 
+# ╔═╡ e1a4d55d-8b7e-4b2b-918d-1ef7e24c5423
+md"""
+## Appendix
+There's something basic enough that you might find useful that, at the time of writing, wasn't that easy to discover.
+You can attach a description to a variable:
+"""
+
+# ╔═╡ f1b7654d-a31f-4c1d-819b-6e03abbfb588
+begin
+	@variables θᵢ(t) [description = "The phase of the ith Swarmalator"]
+	@parameters K [description = "The phase coupling strength"]
+	@named sys = ODESystem([θᵢ ~ K], t)
+end
+
+# ╔═╡ f0212dee-3238-49f2-ac32-0f77ff86c029
+getdescription(θᵢ)
+
+# ╔═╡ 30df7689-3e43-44b9-a165-660a398101d7
+@doc K; # you can also do ?K if you're on the REPL
+
+# ╔═╡ 500522ce-8bb3-4cff-a169-45c686aede2f
+md"""
+That's called "symbolic metadata" in MTK.
+There's a few more things you can specify, such as if the variable is a disturbance input or if it's a parameter that can be automatically tuned.
+That's not for this notebook however!
+"""
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -2422,5 +2449,10 @@ version = "1.4.1+0"
 # ╠═2257a502-7d26-48f0-bcca-71d5cdc622b3
 # ╠═da66b912-12c0-45d3-8813-e3c76f4fc09f
 # ╟─dc9447b1-51ef-4a6a-9de8-ad9c27897485
+# ╟─e1a4d55d-8b7e-4b2b-918d-1ef7e24c5423
+# ╠═f1b7654d-a31f-4c1d-819b-6e03abbfb588
+# ╠═f0212dee-3238-49f2-ac32-0f77ff86c029
+# ╠═30df7689-3e43-44b9-a165-660a398101d7
+# ╟─500522ce-8bb3-4cff-a169-45c686aede2f
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
