@@ -41,7 +41,11 @@ The state variable represents the current state of the system.
 The external forcing function represents an external input to the system that can affect its behavior.
 The parameter (or time constant) determines how quickly the system responds to changes in the external forcing function.
 Both the past system state and the external forcing function contribute to the current system state.
+"""
 
+# ╔═╡ f302f784-36cc-402f-8183-60b7d0104c03
+md"""
+!!! note "First-order Lag Element"
 This type of lag element is often used to model systems that have some inherent delay in their response to external inputs, such as mechanical systems with inertia or electrical systems with capacitance.
 For example, a first-order lag element can be used to model the motion of a mass on a spring, where the mass represents the state variable and the spring represents the external forcing function.
 The parameter of the lag element can be adjusted to match the characteristics of the spring, such as its stiffness and damping.
@@ -82,7 +86,7 @@ end
 # ╔═╡ cc61706e-7e79-4da7-a225-291d913ad989
 md"""
 `ODEProblem` is generated from the `ODESystem`.
-The cool thing is it allows for automatically symbolically calculating numerical enhancements — more on that later.
+The cool thing is it allows for _automatically symbolically calculating numerical enhancements_ — more on that later.
 
 The initial state and the parameter values are specified using a mapping from the actual symbolic elements to their values.
 The mappings are an array of `Pair`s, constructed using the `=>` operator.
@@ -106,7 +110,7 @@ md"""
 Now, besides the differential equation, there's an additional algebraic equation.
 This means that you should move from an `ODEProblem` to a Differential-Algebraic Equation (DAE) problem.
 You know however that the DAE system can be transformed into the single ODE we used above.
-MTK can do that too, through something called structural simplification:
+MTK can do that too, through something called _structural simplification_:
 """
 
 # ╔═╡ 44fc57b9-4c63-4be0-b210-3180da5e378c
@@ -134,7 +138,7 @@ md"""
 The simulation performance of the simplified equation, `fol_simplified` will be the same of `fol_model`, since the two are the exact same equation.
 However, there's a difference.
 MTK keeps track of the eliminated algebraic variables (here `RHS`) as "observables".
-That means that MTK still knows how to calculate them out of the information available in a simulation result.
+That means that MTK _still knows how to calculate them_ out of the information available in a simulation result.
 This allows us to plot the right hand side of our equation, $\frac{h - x(t)}{\tau}$ along with the state variable, $x$:
 """
 
@@ -198,7 +202,7 @@ Why?
 Ofter in modeling we work in time-series data, such as measurement data from an experiment.
 It's common to want to embed the data, well, *as data*, be it in the simulation of a PDE or, as is the case here, as a forcing function on the right-hand side of an ODE.
 Let's illustrate this option by a simple lookup of a vector of random values.
-This can be thought of as a zero-order hold: a model that represents the behavior of a system that holds its output constant between discrete time steps:
+This can be thought of as a _zero-order hold_: a model that represents the behavior of a system that holds its output constant between discrete time steps:
 """
 
 # ╔═╡ dfdaf13a-7295-45b0-9d0a-73894952857c
@@ -252,7 +256,7 @@ end
 md"""
 ## Building component-based, hierarchical models
 Let's now have a glimpse on another thing that makes MTK amazing — something that pairs well with [acausal modeling](https://xlxs4.github.io/notes/juliasim-model-optimizer/#acausal_modeling).
-Instead of tackling a complex system head on, you can compose it from simple systems, in a "modeling framework" kind of fashion.
+Instead of tackling a complex system head on, you can _compose it from simple systems_, in a "modeling framework" kind of fashion.
 A best practive for such a framework could be to use factory functions:
 """
 
@@ -269,7 +273,7 @@ end
 
 # ╔═╡ 93aed201-60ee-40fd-bb17-a8493ca06384
 md"""
-This can help us create model components programmatically.
+This can help us create model components _programmatically_.
 We can instantiate the same component multiple times.
 Not only that, it allows for some customization:
 """
@@ -472,7 +476,7 @@ PlutoUI = "~0.7.49"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.8.3"
+julia_version = "1.8.4"
 manifest_format = "2.0"
 project_hash = "8c6d8ab4ed862903403c6c33663f17b52b2a41af"
 
@@ -636,7 +640,7 @@ uuid = "00ebfdb7-1f24-5e51-bd34-a7502290713f"
 version = "3.3.6"
 
 [[deps.Cairo_jll]]
-deps = ["Artifacts", "Bzip2_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
+deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
 git-tree-sha1 = "4b859a208b2397a7a623a03449e4636bdb17bcf2"
 uuid = "83423d85-b0ee-5818-9007-b63ccbeb887a"
 version = "1.16.1+1"
@@ -726,7 +730,7 @@ version = "4.5.0"
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
-version = "0.5.2+0"
+version = "1.0.1+0"
 
 [[deps.CompositeTypes]]
 git-tree-sha1 = "02d2316b7ffceff992f3096ae48c7829a8aa0638"
@@ -2394,6 +2398,7 @@ version = "1.4.1+0"
 # ╔═╡ Cell order:
 # ╠═813af976-0c24-4831-b750-b775e7fe8078
 # ╟─6fa29060-7e58-11ed-0684-771304878d5f
+# ╟─f302f784-36cc-402f-8183-60b7d0104c03
 # ╠═b47acfc8-0f96-49e5-840f-eba2db7414a2
 # ╠═e490813f-6741-488a-8819-6173e742d019
 # ╠═dcb36b65-c58f-4b6c-9353-da3054626e52
