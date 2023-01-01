@@ -20,14 +20,14 @@ using DifferentialEquations, Plots
 md"""
 ## Modeling Paradigms
 As we've [previously seen](https://xlxs4.github.io/modeling-toolkit-exploration/introduction.html#dade5cc9-a511-4428-87b4-94d2a6160a35), MTK is an acausal (and causal) modeling framework.
-This means instead of tackling a complex system head on, you can compose it from simple systems. To better understand this, we need to briefly go over the two modeling paradigms, causal and acausal.
+This means _instead of tackling a complex system_ head on, you can _compose it from simple systems_. To better understand this, we need to briefly go over the two modeling paradigms, causal and acausal.
 """
 
 # ╔═╡ 4c5ff71c-dbe9-45ae-a069-1c4312c2814a
 md"""
 ### Causal Modeling
 In causal modeling, we describe the causal mechanisms of a system.
-The way that this works is we provide clear rules for the interactions between functional blocks.
+The way that this works is we provide clear rules for the _interactions_ between functional blocks.
 Causal models describe causal relationships between functional blocks.
 Here we're worried about the flow of computation — one could draw an analogy between causal modeling and the imperative programming paradigm.
 An example could be a causal [Block diagram](https://www.mathworks.com/help/simulink/gs/simulink-block-diagrams.html) in [Simulink](https://www.mathworks.com/products/simulink.html), where each block represents a component and the connections between the blocks represent the flow of information between those components.
@@ -36,20 +36,24 @@ An example could be a causal [Block diagram](https://www.mathworks.com/help/simu
 # ╔═╡ 7414b201-7393-41ac-a4ce-491b96b86895
 md"""
 ### Acausal Modeling
-In contrast, in acausal modeling we describe the behavior and the properties of the model components.
+In contrast, in acausal modeling we describe the behavior and the _properties_ of the model components.
 Then, the models are built up out of the composition of the components.
 The overall dynamics of the model fall out of the cumulative behavior of the composition.
 We only worry about the connections and the relationships between these functional blocks — we don't want to frame the problem particularly in terms of the flow of computation that has to happen.
 Instead, we want to think about individual components and the relationships between one another.
 Acausal models describe undirected algebraic relationships between functional blocks.
 This is more akin to the declarative programming paradigm.
+"""
 
+# ╔═╡ 3057d9a3-5b70-4137-88db-845b405486ce
+md"""
+!!! note "Acausal Modeling Advantages"
 There's some key advantages to following the acausal modeling paradigm.
-Acausal modeling can be expressive.
+Acausal modeling can be **expressive**.
 This allows us to think like scientists and engineers instead of being limited in framing the problem only in terms of how to compute the results.
-Acausal modeling can also be concise.
+Acausal modeling can also be **concise**.
 This can allow us to build large-scale models by connecting well-tested components.
-Lastly, acausal modeling can be reusable.
+Lastly, acausal modeling can be **reusable**.
 We can bring these well-tested components and entire component models with us to build new systems.
 """
 
@@ -57,15 +61,19 @@ We can bring these well-tested components and entire component models with us to
 md"""
 ## Introduction
 Let's take a look at how we can build a hierarchical acausal component-based model of the RC circuit.
-An RC (resistor-capacitor) circuit at its simplest form consists of a resistor and a charged capacitor connected to one another in a single loop, without an external voltage source.
+An RC (_resistor-capacitor_) circuit at its simplest form consists of a resistor and a charged capacitor connected to one another in a single loop, without an external voltage source.
 These two components interact with each other to produce a range of electrical phenomena that are important in many practical applications, such as filters or oscillators.
 This simple circuit can be represented with this electrical diagram:
 
 ![](https://github.com/xlxs4/modeling-toolkit-exploration/blob/main/assets/rc-circuit.png?raw=true)
+"""
 
-To see how the, time-dependent, voltage across the capacitor in this circuit fluctuates, a more traditional approach could be the following:
+# ╔═╡ d205e20c-2fea-49e8-9b8a-60133f84902e
+md"""
+!!! note "Solving Analytically"
+To see how the time-dependent voltage across the capacitor in this circuit fluctuates, a more traditional approach could be this:
 Using [Kirchoff's current law](https://www.wikiwand.com/en/Kirchhoff's_circuit_laws#Kirchhoff's_current_law), we know that the current through the resistor must be equal in magnitude (but opposite in sign) to the time derivative of the accumulated charge on the capacitor.
-This gives this linear DE:
+This gives a linear DE:
 
 $C\frac{dV}{dt} + \frac{V}{R} = 0$
 
@@ -73,11 +81,14 @@ where $C$ is the capacitance.
 Solving for $V$ yields
 
 $V(t) = V_0e^{-\frac{t}{RC}}$
+"""
 
+# ╔═╡ 8d87fa2a-ea48-4079-bc49-d6b02f01058c
+md"""
 That was a lengthy detour, but it will help put the process of acausal component-based modeling into context.
 Why do we care if it's just a simple linear DE?
 We wish to build the RC circuit by building individual components and connecting the pins.
-That's an intuitive look into why this way of modeling can help us think like scientists or engineers.
+That's going to be an intuitive look into why this way of modeling can help us _think like scientists_ or engineers.
 If we write all the components, and then just simply connect them together, we don't even have to think about writing the DE.
 Let's explore!
 """
@@ -111,7 +122,22 @@ end
 md"""
 `[connect = Flow]` informs MTK that currents should sum to zero.
 For the voltages we don't have to do anything, since the variables in a connection are equal by default.
+"""
 
+# ╔═╡ 9881dd42-2b61-4138-9409-f23bf3441da8
+let
+	content = md"""
+	It’s the same as Modelica:
+
+	- `Equality` variables connect by making values equal. For example, connecting pins in an electrical circuit makes the voltages equal at the junction.
+	- `Flow` variables connect by making the sum zero. For example, connecting pins in an electrical circuit makes the current sum to zero at the junction.
+	- `Stream` connectors are for fluids. See [the Modelica specificaction](https://specification.modelica.org/master/stream-connectors.html) and [the rationale](https://build.openmodelica.org/Documentation/Modelica%204.0.0/Resources/Documentation/Fluid/Stream-Connectors-Overview-Rationale.pdf) behind that choice for more.
+	"""
+	HTML("<details><summary><strong>Variable metadata</strong></summary>$(html(content))</details>")
+end
+
+# ╔═╡ 0fd8cfc8-602a-4ffa-a706-5a986cd5b225
+md"""
 `Pin` returns an `ODESystem` that is incompletely specified — it cannot be simulated on its own, because the equations for `v(t)` and `i(t)` are unknown.
 Instead, it just gives a common syntax for receiving this pair with some default values.
 
@@ -161,7 +187,7 @@ In theory they can actually be different names, e.g. when you're using this to b
 You use the macros for the naming to happen automatically.
 
 We can jump in on creating our other components, but this is a great opportunity to highlight an important concept in doing acausal work with MTK.
-Because we can compose our models bottom-up with modular, reusable components, we can better structure our model by leveraging abstraction.
+Because we can compose our models bottom-up with modular, reusable components, we can better structure our model by leveraging _abstraction_.
 So instead, we'll first define a one-port component.
 A one-port is a circuit element that has a single input and a single output port — it's a basic building block in electrical circuit theory and can be used to model a wide range of passive and active devices, including resistors and capacitors.
 
@@ -268,10 +294,10 @@ end
 md"""
 Let's reflect upon what we did.
 We've created a bunch of layered abstractions and ultimatelly defined each and every one of the component we need.
-Because it's all just Julia code, nothing stops us from putting them in a file and exporting the definitions.
+Because _it's all Julia code_, nothing stops us from putting them in a file and exporting the definitions.
 That way, the next time we'll need to model something that also consists of a `Resistor`, we'll be able to reuse what we already have.
 That's so cool!
-It means every time we model something, we involuntarily expand our own personal library of reusable components to build models with!
+It means every time we model something, we **involuntarily expand our own personal library of reusable components to build models with**!
 And, of course, nothing stops you from sharing these.
 The world is your oyster.
 
@@ -333,7 +359,7 @@ We have everything we need to build our four-component model with these connecti
 # ╔═╡ 03e38a9e-38e6-4911-ae45-fee8eff57eea
 md"""
 We got ourselves a model!
-Note: this model is acausal because we haven't specified anything about the causality of the model.
+Note: this model is acausal because we haven't specified _anything_ about the causality of the model.
 We have simply specified what holds true about each of the variables, nothing more.
 This forms a system of differential-algebraic equations (DAEs) which define the evolution of each state of the system.
 Here are our equations:
@@ -388,8 +414,26 @@ Compare that to the equations and states of `rc_model`.
 Yeah.
 After structural simplification we are left with a system of only two equations with two state variables.
 One of the equations is a differential equation while the other is an algebraic equation.
+"""
 
-Now, we can give the values for the initial conditions of our stateas and solve the system by converting it to an `ODEProblem` in mass matrix form and solving it with an [ODEProblem mass matrix DAE solver](https://docs.sciml.ai/DiffEqDocs/stable/solvers/dae_solve/#OrdinaryDiffEq.jl-(Mass-Matrix)):
+# ╔═╡ c73aaabc-9019-4601-a0b0-1171a909ffed
+let
+	content = md"""
+	This is a very interesting part of MTK.
+	It's also part of the MTK _internals_, so we'll save the details for another time.
+	What `structural_simplify` does is essentially:
+
+	- Initialize the system structure
+	- Alias elimination
+	- DAE index lowering (if the system is an `ODESystem`)
+	- Tearing
+	"""
+	HTML("<details><summary><strong>Structural Simplification</strong></summary>$(html(content))</details>")
+end
+
+# ╔═╡ 91d30e95-c05b-4a6b-922a-402a165331ba
+md"""
+Now, we can give the values for the initial conditions of our states and solve the system by converting it to an `ODEProblem` in mass matrix form and solving it with an [ODEProblem mass matrix DAE solver](https://docs.sciml.ai/DiffEqDocs/stable/solvers/dae_solve/#OrdinaryDiffEq.jl-(Mass-Matrix)):
 """
 
 # ╔═╡ 66ed2871-8cb0-4473-b54e-5a1f1b757a9e
@@ -423,7 +467,7 @@ end
 # ╔═╡ b5037ff6-960c-4f7b-bcae-1fa58e061049
 md"""
 Done.
-In case you haven't noticed, we went from this complicated set of equations to MTK solving the whole system by only solving for one single variable.
+In case you haven't noticed, we went from this complicated set of equations to MTK solving the whole system by only solving for _one single variable_.
 Let that sink in.
 
 And, as we've already seen before, while we solved the whole system by only solving for one variable, that doesn't mean we've lost information about how the other variables evolve.
@@ -440,7 +484,21 @@ md"""
 There, we got them back.
 These are explicit algebraic equations which can then be used to *reconstruct the required variables on the fly*.
 This leads to dramatic computational savings because implicitly solving an ODE scales like $O(n^3)$, so making sure that there's as few states as possible is pretty damn good.
+"""
 
+# ╔═╡ 4f1fa70c-e061-445c-b3db-82ebaa6fb8b4
+let
+	content = md"""
+	In the variable "elimination" algorithms, the variables are removed from being states and the equations are moved into the `observed` category of the system.
+	The `observed` equations are explicit algebraic equations that get substituted out to completely eliminate these variables from the other equations.
+
+	`sol[x]` _lazily_ reconstructs the observed variable when necessary, using the relationships stored.
+	"""
+	HTML("<details><summary><strong>Observables</strong></summary>$(html(content))</details>")
+end
+
+# ╔═╡ 773e3bb8-6c05-4273-a7bd-1684a41a6ba9
+md"""
 The solution object can be accessed via it symbols.
 Let's retrieve the voltage of the resistor as it evolved over time:
 """
@@ -495,7 +553,7 @@ PlutoUI = "~0.7.49"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.8.3"
+julia_version = "1.8.4"
 manifest_format = "2.0"
 project_hash = "55210daf51a2d05d55a4868227c83784a637db37"
 
@@ -653,7 +711,7 @@ uuid = "00ebfdb7-1f24-5e51-bd34-a7502290713f"
 version = "3.3.6"
 
 [[deps.Cairo_jll]]
-deps = ["Artifacts", "Bzip2_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
+deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
 git-tree-sha1 = "4b859a208b2397a7a623a03449e4636bdb17bcf2"
 uuid = "83423d85-b0ee-5818-9007-b63ccbeb887a"
 version = "1.16.1+1"
@@ -743,7 +801,7 @@ version = "4.5.0"
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
-version = "0.5.2+0"
+version = "1.0.1+0"
 
 [[deps.CompositeTypes]]
 git-tree-sha1 = "02d2316b7ffceff992f3096ae48c7829a8aa0638"
@@ -2369,12 +2427,17 @@ version = "1.4.1+0"
 # ╟─92c62c66-430e-4ac5-bdd0-295e05d57b16
 # ╟─4c5ff71c-dbe9-45ae-a069-1c4312c2814a
 # ╟─7414b201-7393-41ac-a4ce-491b96b86895
+# ╟─3057d9a3-5b70-4137-88db-845b405486ce
 # ╟─6b1c1de0-4e7d-41bf-a53b-bd18f69152a9
+# ╟─d205e20c-2fea-49e8-9b8a-60133f84902e
+# ╟─8d87fa2a-ea48-4079-bc49-d6b02f01058c
 # ╟─f86c4eac-5344-4b3c-9a8e-c49c1d54cba1
 # ╠═6fc905c4-65b2-4475-b33f-adcf9c694f11
 # ╠═a08714f5-f3b1-45b9-b35f-4555a1803da1
 # ╠═7233f6a1-9915-4b30-bd3a-9f82c7ad70ac
 # ╟─bf5ec9df-670a-496e-bfb5-d688c83334d0
+# ╟─9881dd42-2b61-4138-9409-f23bf3441da8
+# ╟─0fd8cfc8-602a-4ffa-a706-5a986cd5b225
 # ╠═19426054-9da0-4da2-b6b7-295ade8442ae
 # ╟─3a3e88de-5926-4a67-b88a-17fe3dca8928
 # ╠═bbf5ae7b-601f-457a-8731-93f8a7f7df53
@@ -2405,6 +2468,8 @@ version = "1.4.1+0"
 # ╠═6c441f74-bb58-4a12-8341-c46846914247
 # ╠═2d0b4ec9-8eed-4349-a063-d520c7b4315e
 # ╟─a259cb39-8626-486c-94ea-eb838aa08fe2
+# ╟─c73aaabc-9019-4601-a0b0-1171a909ffed
+# ╟─91d30e95-c05b-4a6b-922a-402a165331ba
 # ╠═d613176c-fedc-4402-8c5b-db43f220d080
 # ╠═66ed2871-8cb0-4473-b54e-5a1f1b757a9e
 # ╟─79c048a4-6bcd-4623-81d3-423a941faa58
@@ -2412,6 +2477,8 @@ version = "1.4.1+0"
 # ╟─b5037ff6-960c-4f7b-bcae-1fa58e061049
 # ╠═f3821760-162e-4f42-be12-7e09a85dd144
 # ╟─08290ae3-15fb-42ee-97ca-8aec41fc50c6
+# ╟─4f1fa70c-e061-445c-b3db-82ebaa6fb8b4
+# ╟─773e3bb8-6c05-4273-a7bd-1684a41a6ba9
 # ╠═3985a4bc-6695-423d-adbb-5c150da0af5f
 # ╟─14679712-b2a0-489c-bd52-09e0bd2553c9
 # ╠═efd549b6-fc1c-4254-92ad-20cf7c837763
